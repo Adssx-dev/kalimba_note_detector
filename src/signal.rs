@@ -1,7 +1,10 @@
 use std::io::Write;
+use crate::dsp::measures::root_mean_square;
+use crate::dsp::normalize::max_normalize;
 
 pub struct Signal {
-    samples : Vec<Vec<f32>>,
+    left_samples : Vec<f32>,
+    right_samples : Vec<f32>,
 
     sample_rate : u32,
 }
@@ -9,15 +12,11 @@ pub struct Signal {
 impl Signal {
 
     pub fn new() -> Signal {
-        let mut signal = Signal {
-            samples : Vec::new(),
+        Signal {
+            left_samples : Vec::new(),
+            right_samples : Vec::new(),
             sample_rate : 0
-        };
-
-        signal.samples.push(Vec::new()); // Left
-        signal.samples.push(Vec::new()); // Right
-
-        signal
+        }
     }
 
     pub fn from_mp3(file_path : &str) -> Signal {
@@ -25,18 +24,36 @@ impl Signal {
         let data = std::fs::read(file_path).expect("Could not open file");
         let (header, samples) = puremp3::read_mp3(&data[..]).expect("Invalid MP3");
         for (left, right) in samples {
-            result.samples[0].push(left);
-            result.samples[1].push(right);
+            result.left_samples.push(left);
+            result.right_samples.push(right);
         }
         result.sample_rate = header.sample_rate.hz();
         result
     }
 
+    pub fn root_mean_square(&self) -> (f32, f32) {
+        
+        let left_rms = root_mean_square(&self.left_samples);
+        let right_rms = root_mean_square(&self.right_samples);
+        (left_rms, right_rms)
+    }
+
+    pub fn normalize(&self) -> Signal {
+        let mut s = Signal {
+            left_samples : Vec::new(),
+            right_samples : Vec::new(),
+            sample_rate : self.sample_rate
+        };
+        s.left_samples = max_normalize(&self.left_samples);
+        s.right_samples = max_normalize(&self.right_samples);
+        s
+    }
+
     pub fn dump_csv(&self, file_path : &str) {
         let mut file = std::fs::File::create(file_path).expect("create failed");
         file.write_all("left,right".as_bytes()).expect("write failed");
-        for idx in 0..self.samples[0].len() {
-            file.write_all(format!("\n{},{}", self.samples[0][idx], self.samples[1][idx]).as_bytes()).expect("write failed");
+        for idx in 0..self.left_samples.len() {
+            file.write_all(format!("\n{},{}", self.left_samples[idx], self.right_samples[idx]).as_bytes()).expect("write failed");
         }
     }
 }
