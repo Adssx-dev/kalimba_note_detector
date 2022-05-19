@@ -1,6 +1,6 @@
 use std::io::Write;
 use crate::dsp::measures::root_mean_square;
-use crate::dsp::normalize::max_normalize;
+use crate::dsp::normalize::{rms_normalize};
 
 pub struct Signal {
     left_samples : Vec<f32>,
@@ -44,8 +44,8 @@ impl Signal {
             right_samples : Vec::new(),
             sample_rate : self.sample_rate
         };
-        s.left_samples = max_normalize(&self.left_samples);
-        s.right_samples = max_normalize(&self.right_samples);
+        s.left_samples = rms_normalize(&self.left_samples, 1.0);
+        s.right_samples = rms_normalize(&self.right_samples, 1.0);
         s
     }
 
