@@ -1,12 +1,14 @@
 mod signal;
 mod dsp;
+use crate::dsp::fft;
 
 
 fn main() {
-    let sig = signal::Signal::from_mp3("data/harry potter.mp3");
-    let (rms_l, rms_r) = sig.root_mean_square();
+    let sig = signal::Signal::from_mp3("data/A.mp3");
     let normalized_sig = sig.normalize();
-    println!("{}, {}",rms_l, rms_r );
     sig.dump_csv("data.csv") ;
     normalized_sig.dump_csv("data3.csv") ;
+
+    let sig_fft = sig.fft();
+    sig_fft.dump_csv("fft.csv");
 }
