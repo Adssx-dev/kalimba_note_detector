@@ -40,9 +40,9 @@ impl Signal {
         }
     }
 
-    pub fn from_vector(samples : &Vec<f32>, basis_definition : BasisDefinition) -> Signal {
+    pub fn from_vector(samples : &[f32], basis_definition : BasisDefinition) -> Signal {
         Signal {
-            samples : samples.clone(),
+            samples : samples.clone().into(),
             basis_definition,
         }
     }
